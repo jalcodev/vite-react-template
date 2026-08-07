@@ -13,12 +13,18 @@
 	},
 	"dependencies": {
 		"hono": "4.11.1",
+		"maplibre-gl": "^6.2.0",
 		"react": "19.2.1",
-		"react-dom": "19.2.1"
+		"react-dom": "19.2.1",
+		"react-router-dom": "^7.18.2",
+		"recharts": "^3.10.1",
+		"viem": "^2.55.11",
+		"x402-fetch": "^1.2.0"
 	},
 	"devDependencies": {
 		"@cloudflare/vite-plugin": "1.15.3",
 		"@eslint/js": "9.39.1",
+		"@types/geojson": "^7946.0.16",
 		"@types/node": "24.10.1",
 		"@types/react": "19.2.7",
 		"@types/react-dom": "19.2.3",

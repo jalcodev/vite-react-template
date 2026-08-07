@@ -1,66 +1,74 @@
-// src/App.tsx
-
 import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import viteLogo from "/vite.svg";
-import cloudflareLogo from "./assets/Cloudflare_Logo.svg";
-import honoLogo from "./assets/hono.svg";
+import { Routes, Route, Link, NavLink } from "react-router-dom";
 import "./App.css";
+import Home from "./Home";
+import GridMap from "./GridMap";
+import ZoneDetail from "./ZoneDetail";
+import ComingSoon from "./ComingSoon";
+import Developers from "./Developers";
+import Pricing from "./Pricing";
+import Zones from "./Zones";
+import Rankings from "./Rankings";
+import Privacy from "./Privacy";
+import Terms from "./Terms";
 
-function App() {
-	const [count, setCount] = useState(0);
-	const [name, setName] = useState("unknown");
+export default function App() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const navClass = ({ isActive }: { isActive: boolean }) => (isActive ? "active" : "");
 
-	return (
-		<>
-			<div>
-				<a href="https://vite.dev" target="_blank">
-					<img src={viteLogo} className="logo" alt="Vite logo" />
-				</a>
-				<a href="https://react.dev" target="_blank">
-					<img src={reactLogo} className="logo react" alt="React logo" />
-				</a>
-				<a href="https://hono.dev/" target="_blank">
-					<img src={honoLogo} className="logo cloudflare" alt="Hono logo" />
-				</a>
-				<a href="https://workers.cloudflare.com/" target="_blank">
-					<img
-						src={cloudflareLogo}
-						className="logo cloudflare"
-						alt="Cloudflare logo"
-					/>
-				</a>
-			</div>
-			<h1>Vite + React + Hono + Cloudflare</h1>
-			<div className="card">
-				<button
-					onClick={() => setCount((count) => count + 1)}
-					aria-label="increment"
-				>
-					count is {count}
-				</button>
-				<p>
-					Edit <code>src/App.tsx</code> and save to test HMR
-				</p>
-			</div>
-			<div className="card">
-				<button
-					onClick={() => {
-						fetch("/api/")
-							.then((res) => res.json() as Promise<{ name: string }>)
-							.then((data) => setName(data.name));
-					}}
-					aria-label="get name"
-				>
-					Name from API is: {name}
-				</button>
-				<p>
-					Edit <code>worker/index.ts</code> to change the name
-				</p>
-			</div>
-			<p className="read-the-docs">Click on the logos to learn more</p>
-		</>
-	);
+  return (
+    <div className="app-shell">
+      <aside className={sidebarOpen ? "sidebar open" : "sidebar"}>
+        <Link to="/" className="wordmark">GridHub</Link>
+        <nav className="sidebar-nav">
+          <NavLink to="/map" className={navClass}>Map</NavLink>
+          <NavLink to="/zones" className={navClass}>Zones</NavLink>
+          <NavLink to="/rankings" className={navClass}>Rankings</NavLink>
+          <NavLink to="/pricing" className={navClass}>Pricing</NavLink>
+          <NavLink to="/developers" className={navClass}>Developers</NavLink>
+        </nav>
+        <div className="sidebar-spacer" />
+        <Link to="/developers" className="sidebar-cta">Get API access</Link>
+        <div className="ad-slot" aria-label="Advertisement">
+          <span className="ad-label">Advertisement</span>
+        </div>
+      </aside>
+
+      <div className="app-main">
+        <div className="top-bar">
+          <div className="top-bar-left">
+            <button
+              className="sidebar-toggle"
+              aria-label={sidebarOpen ? "Close menu" : "Open menu"}
+              aria-expanded={sidebarOpen}
+              onClick={() => setSidebarOpen((v) => !v)}
+            >
+              <span />
+              <span />
+              <span />
+            </button>
+            <p className="top-bar-tagline">
+              Live electricity prices, demand, and generation across 25 grids
+            </p>
+          </div>
+          <Link to="/pricing" className="top-bar-cta">API access from $0.001/call</Link>
+        </div>
+
+        <div className="page-content">
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/map" element={<GridMap />} />
+            <Route path="/zones/:id" element={<ZoneDetail />} />
+            <Route path="/zones" element={<Zones />} />
+            <Route path="/rankings" element={<Rankings />} />
+            <Route path="/pricing" element={<Pricing />} />
+            <Route path="/developers" element={<Developers />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="*" element={<ComingSoon title="Not found" />} />
+          </Routes>
+        </div>
+      </div>
+    </div>
+  );
 }
-
-export default App;
