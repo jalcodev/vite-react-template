@@ -21,9 +21,6 @@ app.get("/api/gridhub/*", async (c) => {
     return c.json({ error: "upstream unreachable", detail: String(e) }, 502);
   }
 
-  // Pass through the upstream body, status, and content-type as-is.
-  // Cache-Control from upstream (e.g. map/snapshot's 60s cache) carries
-  // through naturally too, so the edge caches this proxy the same way.
   const headers = new Headers();
   const ct = upstream.headers.get("content-type");
   if (ct) headers.set("content-type", ct);
@@ -32,5 +29,11 @@ app.get("/api/gridhub/*", async (c) => {
 
   return new Response(upstream.body, { status: upstream.status, headers });
 });
+
+// Everything else (all real page routes) falls through to the static
+// assets binding, which applies the single-page-application fallback —
+// without this, Hono's own 404 intercepts the request before Cloudflare
+// ever gets a chance to serve index.html for client-side routes.
+app.get("*", (c) => c.env.ASSETS.fetch(c.req.raw));
 
 export default app;
