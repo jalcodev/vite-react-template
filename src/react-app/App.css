@@ -983,3 +983,19 @@
 /* ---------- status page ---------- */
 .status-ok { color: var(--signal); }
 .status-bad { color: var(--copper); }
+
+/* ---------- sidebar secondary links ---------- */
+.sidebar-secondary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  margin-top: 16px;
+}
+.sidebar-secondary a {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-decoration: none;
+}
+.sidebar-secondary a:hover {
+  color: var(--copper);
+}

@@ -51,6 +51,15 @@ export default function App() {
         <div className="ad-slot" aria-label="Advertisement">
           <span className="ad-label">Advertisement</span>
         </div>
+        <nav className="sidebar-secondary">
+          <Link to="/about">About</Link>
+          <Link to="/status">Status</Link>
+          <Link to="/sources">Sources</Link>
+          <Link to="/contact">Contact</Link>
+          <Link to="/blog">Blog</Link>
+          <Link to="/privacy">Privacy</Link>
+          <Link to="/terms">Terms</Link>
+        </nav>
       </aside>
 
       <div className="app-main">
