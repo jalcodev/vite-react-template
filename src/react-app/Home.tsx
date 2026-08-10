@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { ZONE_NAMES } from "./GridMap";
 import ZoneGrid from "./ZoneGrid";
+import { useMeta } from "./useMeta";
 
 type Metric = { value: number; unit: string; ts: number; resolution: string };
 type ZoneSnapshot = { metrics: Record<string, Metric> };
@@ -11,6 +12,10 @@ function formatValue(v: number): string {
 }
 
 export default function Home() {
+  useMeta(
+    "GridHub — live electricity market data",
+    "Live wholesale prices, demand, and generation mix across 25 grids in the US, UK, Australia, and Europe."
+  );
   const [snapshot, setSnapshot] = useState<MapSnapshot | null>(null);
   const [error, setError] = useState(false);
 

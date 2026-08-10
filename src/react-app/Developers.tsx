@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useMeta } from "./useMeta";
 
 const FREE_ENDPOINTS = [
   { path: "/v1/zones", desc: "Coverage list, licences, attribution" },
@@ -22,6 +23,7 @@ const PAID_ENDPOINTS = [
 const BASE = "https://api.grid-hub.app";
 
 export default function Developers() {
+  useMeta("API documentation — GridHub", "Quickstart, endpoint reference, and x402 payment flow for the GridHub electricity data API.");
   return (
     <div className="developers">
       <h1>API documentation</h1>

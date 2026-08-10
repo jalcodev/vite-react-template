@@ -4,6 +4,7 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
 import { ZONE_NAMES } from "./GridMap";
+import { useMeta } from "./useMeta";
 
 type Metric = { value: number; unit: string; ts: number; resolution: string };
 type ZoneLatest = {
@@ -39,6 +40,11 @@ function fuelBreakdown(metrics: Record<string, Metric>, prefix: string): { fuel:
 
 export default function ZoneDetail() {
   const { id } = useParams<{ id: string }>();
+  const zoneName = id ? (ZONE_NAMES[id] ?? id) : "";
+  useMeta(
+    zoneName ? `${zoneName} (${id}) — live electricity data — GridHub` : "Zone — GridHub",
+    zoneName ? `Live price, demand, and generation data for ${zoneName}, updated in real time.` : "GridHub zone data"
+  );
   const [snapshot, setSnapshot] = useState<ZoneLatest | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [range, setRange] = useState<Range>("24h");
@@ -83,7 +89,7 @@ export default function ZoneDetail() {
     );
   }
 
-  const name = id ? (ZONE_NAMES[id] ?? id) : "";
+  const name = zoneName;
   const metrics = snapshot?.metrics ?? {};
   const price = metrics.price;
   const demand = metrics.demand;

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ZONE_NAMES } from "./GridMap";
+import { useMeta } from "./useMeta";
 
 type Metric = { value: number; unit: string; ts: number; resolution: string };
 type ZoneSnapshot = { metrics: Record<string, Metric> };
@@ -14,6 +15,7 @@ function formatMW(v: number): string {
 }
 
 export default function Rankings() {
+  useMeta("Rankings — GridHub", "Live leaderboards of electricity price and demand across every grid GridHub tracks.");
   const [snapshot, setSnapshot] = useState<MapSnapshot | null>(null);
   const [error, setError] = useState(false);
 

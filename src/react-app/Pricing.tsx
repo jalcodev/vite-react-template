@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import PayWidget from "./PayWidget";
+import { useMeta } from "./useMeta";
 
 const PAID_ENDPOINTS = [
   { path: "/v1/latest/{zone}", price: "$0.001", desc: "Most recent snapshot for one zone" },
@@ -36,6 +37,7 @@ const FAQ = [
 ];
 
 export default function Pricing() {
+  useMeta("Pricing — GridHub", "Per-call pricing for the GridHub electricity data API, from $0.001. No signup, no subscription.");
   return (
     <div className="developers">
       <h1>Pricing</h1>

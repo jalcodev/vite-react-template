@@ -1,7 +1,9 @@
 import { useState } from "react";
 import ZoneGrid from "./ZoneGrid";
+import { useMeta } from "./useMeta";
 
 export default function Zones() {
+  useMeta("All zones — GridHub", "Browse all 25 electricity grids GridHub tracks, with live price and demand data.");
   const [query, setQuery] = useState("");
 
   return (
