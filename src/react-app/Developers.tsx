@@ -22,6 +22,17 @@ const PAID_ENDPOINTS = [
 
 const BASE = "https://api.grid-hub.app";
 
+const BADGES = [
+  { id: "4aa7a33d-f37", label: "Map snapshot" },
+  { id: "4248243d-e42", label: "Latest state" },
+  { id: "16c9f416-a24", label: "Demand history" },
+  { id: "7ba3dc37-ebc", label: "Generation history" },
+  { id: "e49d1275-d11", label: "Price history" },
+  { id: "0381874f-113", label: "Carbon intensity" },
+  { id: "1b0875a3-956", label: "Interconnector flows" },
+  { id: "58fabd0a-0d5", label: "Capacity" },
+];
+
 export default function Developers() {
   useMeta("API documentation — GridHub", "Quickstart, endpoint reference, and x402 payment flow for the GridHub electricity data API.");
   return (
@@ -82,6 +93,16 @@ export default function Developers() {
             /.well-known/x402.json
           </a>
         </p>
+      </section>
+
+      <section className="dev-section">
+        <h2>Verified listings</h2>
+        <p>Independently probed and verified by nohumans.directory:</p>
+        <div className="badge-row">
+          {BADGES.map((b) => (
+            <a key={b.id} href={"https://nohumans.directory/l/" + b.id} target="_blank" rel="noreferrer" className="badge-link"><img src={"https://nohumans.directory/badge/" + b.id + ".svg"} alt={b.label + " - verified"} /></a>
+          ))}
+        </div>
       </section>
 
       <section className="dev-section">

@@ -999,3 +999,19 @@
 .sidebar-secondary a:hover {
   color: var(--copper);
 }
+
+/* ---------- verification badges ---------- */
+.badge-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+.badge-link {
+  display: inline-block;
+  line-height: 0;
+}
+.badge-link img {
+  height: 20px;
+  display: block;
+}
