@@ -18,8 +18,14 @@ export default function App() {
 
   return (
     <div className="app-shell">
+      {sidebarOpen && <div className="sidebar-backdrop" onClick={() => setSidebarOpen(false)} />}
       <aside className={sidebarOpen ? "sidebar open" : "sidebar"}>
-        <Link to="/" className="wordmark">GridHub</Link>
+        <div className="sidebar-top">
+          <Link to="/" className="wordmark">GridHub</Link>
+          <button className="sidebar-close" aria-label="Close menu" onClick={() => setSidebarOpen(false)}>
+            ✕
+          </button>
+        </div>
         <nav className="sidebar-nav">
           <NavLink to="/map" className={navClass}>Map</NavLink>
           <NavLink to="/zones" className={navClass}>Zones</NavLink>
