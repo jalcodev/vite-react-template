@@ -964,3 +964,18 @@
     bottom: 14px;
   }
 }
+
+/* Mobile sidebar close — appended to guarantee it wins the cascade,
+   regardless of what's already defined earlier in this file. */
+@media (max-width: 820px) {
+  .sidebar-close {
+    display: block !important;
+  }
+  .sidebar-backdrop {
+    display: block !important;
+    position: fixed !important;
+    inset: 0 !important;
+    background: rgba(0, 0, 0, 0.5) !important;
+    z-index: 19 !important;
+  }
+}
