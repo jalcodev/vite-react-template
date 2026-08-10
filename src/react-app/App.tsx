@@ -1,16 +1,29 @@
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { Routes, Route, Link, NavLink } from "react-router-dom";
 import "./App.css";
 import Home from "./Home";
-import GridMap from "./GridMap";
-import ZoneDetail from "./ZoneDetail";
-import ComingSoon from "./ComingSoon";
-import Developers from "./Developers";
-import Pricing from "./Pricing";
 import Zones from "./Zones";
 import Rankings from "./Rankings";
+import Developers from "./Developers";
+import ComingSoon from "./ComingSoon";
 import Privacy from "./Privacy";
 import Terms from "./Terms";
+import About from "./About";
+import Contact from "./Contact";
+import Status from "./Status";
+import Sources from "./Sources";
+
+const GridMap = lazy(() => import("./GridMap"));
+const ZoneDetail = lazy(() => import("./ZoneDetail"));
+const Pricing = lazy(() => import("./Pricing"));
+
+function PageLoading() {
+  return (
+    <p className="home-loading" style={{ padding: 24 }}>
+      Loading&hellip;
+    </p>
+  );
+}
 
 export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -61,18 +74,25 @@ export default function App() {
         </div>
 
         <div className="page-content">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/map" element={<GridMap />} />
-            <Route path="/zones/:id" element={<ZoneDetail />} />
-            <Route path="/zones" element={<Zones />} />
-            <Route path="/rankings" element={<Rankings />} />
-            <Route path="/pricing" element={<Pricing />} />
-            <Route path="/developers" element={<Developers />} />
-            <Route path="/privacy" element={<Privacy />} />
-            <Route path="/terms" element={<Terms />} />
-            <Route path="*" element={<ComingSoon title="Not found" />} />
-          </Routes>
+          <Suspense fallback={<PageLoading />}>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/map" element={<GridMap />} />
+              <Route path="/zones/:id" element={<ZoneDetail />} />
+              <Route path="/zones" element={<Zones />} />
+              <Route path="/rankings" element={<Rankings />} />
+              <Route path="/pricing" element={<Pricing />} />
+              <Route path="/developers" element={<Developers />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/status" element={<Status />} />
+              <Route path="/sources" element={<Sources />} />
+              <Route path="/blog" element={<ComingSoon title="Blog" />} />
+              <Route path="/privacy" element={<Privacy />} />
+              <Route path="/terms" element={<Terms />} />
+              <Route path="*" element={<ComingSoon title="Not found" />} />
+            </Routes>
+          </Suspense>
         </div>
       </div>
     </div>

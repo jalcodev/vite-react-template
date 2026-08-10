@@ -979,3 +979,7 @@
     z-index: 19 !important;
   }
 }
+
+/* ---------- status page ---------- */
+.status-ok { color: var(--signal); }
+.status-bad { color: var(--copper); }
