@@ -1,6 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import * as maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
+import maplibreWorkerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
+
+// MapLibre's worker file doesn't reliably resolve its own location inside a
+// bundler — without this, the worker request 404s in production and silently
+// falls through to our SPA's index.html, which the browser then rejects as
+// an invalid module (wrong MIME type). Must be set before any Map is created.
+maplibregl.setWorkerUrl(maplibreWorkerUrl);
 
 type Metric = { value: number; unit: string; ts: number; resolution: string };
 type ZoneSnapshot = { metrics: Record<string, Metric> };
