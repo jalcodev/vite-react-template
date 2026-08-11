@@ -12,6 +12,8 @@ import About from "./About";
 import Contact from "./Contact";
 import Status from "./Status";
 import Sources from "./Sources";
+import Blog from "./Blog";
+import BlogPost from "./BlogPost";
 
 const GridMap = lazy(() => import("./GridMap"));
 const ZoneDetail = lazy(() => import("./ZoneDetail"));
@@ -96,7 +98,8 @@ export default function App() {
               <Route path="/contact" element={<Contact />} />
               <Route path="/status" element={<Status />} />
               <Route path="/sources" element={<Sources />} />
-              <Route path="/blog" element={<ComingSoon title="Blog" />} />
+              <Route path="/blog" element={<Blog />} />
+              <Route path="/blog/:slug" element={<BlogPost />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="*" element={<ComingSoon title="Not found" />} />
