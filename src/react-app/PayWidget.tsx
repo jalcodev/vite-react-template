@@ -10,7 +10,7 @@ const USDC_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" as const;
 // Canonical Permit2 contract — same address on every EVM chain. This is the
 // spender our facilitator uses (assetTransferMethod: "permit2"), which is
 // why a brand-new wallet's first payment fails without this approval.
-const PERMIT2_ADDRESS = "0x000000000022D473030F116dDEE9F6B43aC78BA" as const;
+const PERMIT2_ADDRESS = "0x000000000022D473030F116dDEE9F6B43aC78BA3" as const;
 
 const ERC20_ABI = parseAbi([
   "function allowance(address owner, address spender) view returns (uint256)",
