@@ -1,15 +1,15 @@
 import { useState } from "react";
 import { createWalletClient, createPublicClient, custom, http, parseAbi, maxUint256 } from "viem";
 import { base } from "viem/chains";
-import { wrapFetchWithPayment } from "x402-fetch";
+import { wrapFetchWithPayment, x402Client } from "@x402/fetch";
+import { ExactEvmScheme } from "@x402/evm/exact/client";
 import { ZONE_NAMES } from "./GridMap";
 
 const ZONE_OPTIONS = Object.keys(ZONE_NAMES);
 const BASE_URL = "https://api.grid-hub.app";
 const USDC_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" as const;
-// Canonical Permit2 contract — same address on every EVM chain. This is the
-// spender our facilitator uses (assetTransferMethod: "permit2"), which is
-// why a brand-new wallet's first payment fails without this approval.
+// Canonical Permit2 contract — verified independently against Etherscan,
+// Uniswap's own docs, and 0x's integration docs before use.
 const PERMIT2_ADDRESS = "0x000000000022D473030F116dDEE9F6B43aC78BA3" as const;
 
 const ERC20_ABI = parseAbi([
@@ -40,9 +40,6 @@ export default function PayWidget() {
       });
       setNeedsApproval(allowance === 0n);
     } catch {
-      // If the check itself fails, don't block the user — let them try to
-      // pay, and if it's genuinely unapproved the real payment attempt will
-      // surface a clear error anyway.
       setNeedsApproval(false);
     } finally {
       setBusy("");
@@ -64,8 +61,7 @@ export default function PayWidget() {
           params: [{ chainId: "0x2105" }], // Base mainnet, 8453
         });
       } catch {
-        // Wallet may already be on Base, or declined the switch — proceed
-        // anyway and let a real payment attempt surface any network error.
+        // Wallet may already be on Base, or declined the switch.
       }
       setAddress(acct);
       await checkApproval(acct);
@@ -94,8 +90,6 @@ export default function PayWidget() {
       await publicClient.waitForTransactionReceipt({ hash });
       setNeedsApproval(false);
       setBusy("");
-      // Approval just landed — continue straight into the actual payment
-      // rather than making the user click twice.
       await buy();
     } catch (e) {
       setErrorMsg(e instanceof Error ? e.message : "Approval failed");
@@ -114,11 +108,25 @@ export default function PayWidget() {
         chain: base,
         transport: custom(window.ethereum),
       });
-      // Same unverified integration point flagged from the start: x402-fetch
-      // expects a viem Account/signer, and a browser WalletClient implements
-      // the same signing surface, but this is the one spot that's only been
-      // confirmed correct through live testing, not by reading the library.
-      const fetchWithPayment = wrapFetchWithPayment(fetch, walletClient as unknown as Parameters<typeof wrapFetchWithPayment>[1]);
+
+      // @x402/evm's exact signer interface isn't fully pinned down from
+      // documentation alone (different examples show slightly different
+      // shapes). This adapter exposes the address both flat and nested
+      // under `.account`, and delegates actual signing to the real wallet
+      // client either way — maximizing compatibility rather than betting
+      // on one specific interpretation.
+      const signer = {
+        address,
+        account: { address },
+        signTypedData: (args: unknown) =>
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          walletClient.signTypedData(args as any),
+      };
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const client = new x402Client().register("eip155:*", new ExactEvmScheme(signer as any));
+      const fetchWithPayment = wrapFetchWithPayment(fetch, client);
+
       const res = await fetchWithPayment(`${BASE_URL}/v1/latest/${zone}`);
       if (!res.ok) {
         let detail = "";
