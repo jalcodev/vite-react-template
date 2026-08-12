@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { createWalletClient, createPublicClient, custom, http, parseAbi, maxUint256 } from "viem";
 import { base } from "viem/chains";
-import { wrapFetchWithPayment, x402Client } from "@x402/fetch";
-import { ExactEvmScheme } from "@x402/evm/exact/client";
+import { wrapFetchWithPayment } from "@x402/fetch";
+import { x402Client } from "@x402/core/client";
+import { registerExactEvmScheme } from "@x402/evm/exact/client";
 import { ZONE_NAMES } from "./GridMap";
 
 const ZONE_OPTIONS = Object.keys(ZONE_NAMES);
@@ -123,8 +124,13 @@ export default function PayWidget() {
           walletClient.signTypedData(args as any),
       };
 
+      // registerExactEvmScheme handles both v2 (ExactEvmScheme) and v1
+      // (ExactEvmSchemeV1) registration internally — confirmed directly from
+      // the installed package's own type declarations, not guessed. Our
+      // backend sends both formats, so this covers whichever one is detected.
+      const client = new x402Client();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const client = new x402Client().register("eip155:*", new ExactEvmScheme(signer as any));
+      registerExactEvmScheme(client, { signer: signer as any });
       const fetchWithPayment = wrapFetchWithPayment(fetch, client);
 
       const res = await fetchWithPayment(`${BASE_URL}/v1/latest/${zone}`);
