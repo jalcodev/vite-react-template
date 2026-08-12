@@ -60,7 +60,16 @@ export default function PayWidget() {
       // place to look.
       const fetchWithPayment = wrapFetchWithPayment(fetch, walletClient as unknown as Parameters<typeof wrapFetchWithPayment>[1]);
       const res = await fetchWithPayment(`${BASE_URL}/v1/latest/${zone}`);
-      if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+      if (!res.ok) {
+        let detail = "";
+        try {
+          const body = await res.json();
+          detail = body?.error ? `: ${body.error}${body.detail ? " — " + JSON.stringify(body.detail) : ""}` : "";
+        } catch {
+          // response wasn't JSON, fall through with no extra detail
+        }
+        throw new Error(`Request failed: ${res.status}${detail}`);
+      }
       const data = await res.json();
       setResult(data);
       setStatus("success");
