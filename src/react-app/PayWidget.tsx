@@ -1,63 +1,123 @@
 import { useState } from "react";
-import { createWalletClient, custom } from "viem";
+import { createWalletClient, createPublicClient, custom, http, parseAbi, maxUint256 } from "viem";
 import { base } from "viem/chains";
 import { wrapFetchWithPayment } from "x402-fetch";
 import { ZONE_NAMES } from "./GridMap";
 
 const ZONE_OPTIONS = Object.keys(ZONE_NAMES);
 const BASE_URL = "https://api.grid-hub.app";
+const USDC_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" as const;
+// Canonical Permit2 contract — same address on every EVM chain. This is the
+// spender our facilitator uses (assetTransferMethod: "permit2"), which is
+// why a brand-new wallet's first payment fails without this approval.
+const PERMIT2_ADDRESS = "0x000000000022D473030F116dDEE9F6B43aC78BA" as const;
 
-type Status = "idle" | "connecting" | "connected" | "paying" | "success" | "error";
+const ERC20_ABI = parseAbi([
+  "function allowance(address owner, address spender) view returns (uint256)",
+  "function approve(address spender, uint256 amount) returns (bool)",
+]);
+
+const publicClient = createPublicClient({ chain: base, transport: http() });
+
+type Busy = "" | "connecting" | "checking" | "approving" | "paying";
 
 export default function PayWidget() {
-  const [status, setStatus] = useState<Status>("idle");
-  const [address, setAddress] = useState<string | null>(null);
+  const [address, setAddress] = useState<`0x${string}` | null>(null);
+  const [needsApproval, setNeedsApproval] = useState(false);
+  const [busy, setBusy] = useState<Busy>("");
   const [zone, setZone] = useState("GB");
   const [result, setResult] = useState<unknown>(null);
   const [errorMsg, setErrorMsg] = useState("");
 
+  async function checkApproval(acct: `0x${string}`) {
+    setBusy("checking");
+    try {
+      const allowance = await publicClient.readContract({
+        address: USDC_ADDRESS,
+        abi: ERC20_ABI,
+        functionName: "allowance",
+        args: [acct, PERMIT2_ADDRESS],
+      });
+      setNeedsApproval(allowance === 0n);
+    } catch {
+      // If the check itself fails, don't block the user — let them try to
+      // pay, and if it's genuinely unapproved the real payment attempt will
+      // surface a clear error anyway.
+      setNeedsApproval(false);
+    } finally {
+      setBusy("");
+    }
+  }
+
   async function connect() {
-    setStatus("connecting");
+    setBusy("connecting");
     setErrorMsg("");
     try {
       if (!window.ethereum) {
         throw new Error("No wallet found. Install a browser wallet like Coinbase Wallet or MetaMask.");
       }
       const accounts = (await window.ethereum.request({ method: "eth_requestAccounts" })) as string[];
-      const acct = accounts[0];
+      const acct = accounts[0] as `0x${string}`;
       try {
         await window.ethereum.request({
           method: "wallet_switchEthereumChain",
           params: [{ chainId: "0x2105" }], // Base mainnet, 8453
         });
       } catch {
-        // Wallet may already be on Base, or the user declined the switch —
-        // proceed anyway and let the payment attempt surface any real error.
+        // Wallet may already be on Base, or declined the switch — proceed
+        // anyway and let a real payment attempt surface any network error.
       }
       setAddress(acct);
-      setStatus("connected");
+      await checkApproval(acct);
     } catch (e) {
       setErrorMsg(e instanceof Error ? e.message : "Failed to connect wallet");
-      setStatus("error");
+      setBusy("");
+    }
+  }
+
+  async function approve() {
+    if (!address || !window.ethereum) return;
+    setBusy("approving");
+    setErrorMsg("");
+    try {
+      const walletClient = createWalletClient({
+        account: address,
+        chain: base,
+        transport: custom(window.ethereum),
+      });
+      const hash = await walletClient.writeContract({
+        address: USDC_ADDRESS,
+        abi: ERC20_ABI,
+        functionName: "approve",
+        args: [PERMIT2_ADDRESS, maxUint256],
+      });
+      await publicClient.waitForTransactionReceipt({ hash });
+      setNeedsApproval(false);
+      setBusy("");
+      // Approval just landed — continue straight into the actual payment
+      // rather than making the user click twice.
+      await buy();
+    } catch (e) {
+      setErrorMsg(e instanceof Error ? e.message : "Approval failed");
+      setBusy("");
     }
   }
 
   async function buy() {
     if (!address || !window.ethereum) return;
-    setStatus("paying");
     setErrorMsg("");
     setResult(null);
+    setBusy("paying");
     try {
       const walletClient = createWalletClient({
-        account: address as `0x${string}`,
+        account: address,
         chain: base,
         transport: custom(window.ethereum),
       });
-      // x402-fetch expects a viem Account/signer. A browser WalletClient
-      // configured with an account implements the same signTypedData surface,
-      // but this is the one integration point we haven't been able to test
-      // live — if this throws a type/runtime mismatch, that's the first
-      // place to look.
+      // Same unverified integration point flagged from the start: x402-fetch
+      // expects a viem Account/signer, and a browser WalletClient implements
+      // the same signing surface, but this is the one spot that's only been
+      // confirmed correct through live testing, not by reading the library.
       const fetchWithPayment = wrapFetchWithPayment(fetch, walletClient as unknown as Parameters<typeof wrapFetchWithPayment>[1]);
       const res = await fetchWithPayment(`${BASE_URL}/v1/latest/${zone}`);
       if (!res.ok) {
@@ -72,10 +132,10 @@ export default function PayWidget() {
       }
       const data = await res.json();
       setResult(data);
-      setStatus("success");
     } catch (e) {
       setErrorMsg(e instanceof Error ? e.message : "Payment failed");
-      setStatus("error");
+    } finally {
+      setBusy("");
     }
   }
 
@@ -89,13 +149,18 @@ export default function PayWidget() {
             </option>
           ))}
         </select>
-        {status === "idle" || status === "connecting" ? (
-          <button className="cta-button" onClick={connect} disabled={status === "connecting"}>
-            {status === "connecting" ? "Connecting…" : "Connect wallet"}
+
+        {!address ? (
+          <button className="cta-button" onClick={connect} disabled={busy === "connecting"}>
+            {busy === "connecting" ? "Connecting…" : "Connect wallet"}
+          </button>
+        ) : needsApproval ? (
+          <button className="cta-button" onClick={approve} disabled={busy === "approving"}>
+            {busy === "approving" ? "Approving…" : "Approve USDC (one-time)"}
           </button>
         ) : (
-          <button className="cta-button" onClick={buy} disabled={status === "paying"}>
-            {status === "paying" ? "Paying…" : "Buy for $0.001"}
+          <button className="cta-button" onClick={buy} disabled={busy === "paying" || busy === "checking"}>
+            {busy === "checking" ? "Checking…" : busy === "paying" ? "Paying…" : "Buy for $0.001"}
           </button>
         )}
       </div>
@@ -106,9 +171,16 @@ export default function PayWidget() {
         </p>
       )}
 
-      {status === "error" && <p className="pay-widget-error">{errorMsg}</p>}
+      {address && needsApproval && (
+        <p className="pay-widget-note">
+          First-time setup: approve USDC spending once (a small one-time gas fee). Every
+          payment after this is instant and gasless.
+        </p>
+      )}
 
-      {status === "success" && result != null && (
+      {errorMsg && <p className="pay-widget-error">{errorMsg}</p>}
+
+      {result != null && (
         <pre className="code-block mono pay-widget-result">
           <code>{JSON.stringify(result, null, 2)}</code>
         </pre>
